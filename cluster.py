@@ -14,9 +14,9 @@ num_words = len(words)
 def random_document():
     vec = []
     for _ in range(num_words):
-        appear = random.choice([0, 1])  # if word appears
+        appear = random.choice([0, 1])
         if appear:
-            vec.append(round(random.uniform(2, 6), 2))  # random TF-IDF
+            vec.append(round(random.uniform(2, 6), 2))
         else:
             vec.append(0.0)
     return np.array(vec)
@@ -25,7 +25,7 @@ documents = np.array([random_document() for _ in range(num_docs)])
 
 
 # -------------------------------------------
-# 2. COSINE SIMILARITY & K-MEANS (K = 2)
+# 2. COSINE SIMILARITY & K-MEANS WITH CONVERGENCE
 # -------------------------------------------
 
 def cosine_similarity(a, b):
@@ -50,14 +50,28 @@ def compute_centroids(docs, assignments, k):
             centroids.append(np.mean(cluster_docs, axis=0))
     return np.array(centroids)
 
-# initialize centroids randomly
+
+# Initialize centroids
 K = 2
 centroids = documents[random.sample(range(num_docs), K)]
 
-# run K-means for fixed number of iterations
-for _ in range(15):
+# Convergence parameters
+epsilon = 1e-4   # threshold for stopping
+max_iters = 100  # safety limit
+
+for iteration in range(max_iters):
+    old_centroids = centroids.copy()
+    
     clusters = assign_clusters(documents, centroids)
     centroids = compute_centroids(documents, clusters, K)
+    
+    # Check convergence
+    change = np.linalg.norm(centroids - old_centroids)
+    print(f"Iteration {iteration+1}, centroid change = {change:.6f}")
+    
+    if change < epsilon:
+        print("\n Converged!")
+        break
 
 
 # -------------------------------------------
